@@ -1,49 +1,61 @@
 pipeline {
     agent any
 
-    parameters {
-
-        choice(
-            name: 'TARGET_ENV',
-            choices: ['dev', 'staging', 'prod'],
-            description: 'Select deployment environment'
-        )
-
-        string(
-            name: 'APP_VERSION',
-            defaultValue: '1.0.0',
-            description: 'Application version'
-        )
-
-        booleanParam(
-            name: 'RUN_TESTS',
-            defaultValue: true,
-            description: 'Run test cases before deployment'
-        )
-    }
-
     stages {
 
         stage('Build') {
             steps {
-                echo "Building Version: ${params.APP_VERSION}"
-                echo "Target Environment: ${params.TARGET_ENV}"
+                echo "Application Build Started"
             }
         }
 
         stage('Test') {
-            when {
-                expression { params.RUN_TESTS == true }
-            }
             steps {
-                echo "Running Test Cases..."
+                echo "Running Tests"
             }
         }
 
         stage('Deploy') {
             steps {
-                echo "Deploying Version ${params.APP_VERSION} to ${params.TARGET_ENV}"
+                echo "Deployment Successful"
             }
+        }
+    }
+
+    post {
+
+        success {
+
+            emailext(
+                subject: "SUCCESS: ${env.JOB_NAME} Build #${env.BUILD_NUMBER}",
+                body: """
+Build Completed Successfully
+
+Job Name : ${env.JOB_NAME}
+Build No : ${env.BUILD_NUMBER}
+
+Build URL:
+${env.BUILD_URL}
+""",
+                to: "rajeev@example.com"
+            )
+        }
+
+        failure {
+
+            emailext(
+                subject: "FAILED: ${env.JOB_NAME} Build #${env.BUILD_NUMBER}",
+                body: """
+Build Failed
+
+Job Name : ${env.JOB_NAME}
+Build No : ${env.BUILD_NUMBER}
+
+Build URL:
+${env.BUILD_URL}
+""",
+                to: "rajeev@example.com"
+            )
         }
     }
 }
